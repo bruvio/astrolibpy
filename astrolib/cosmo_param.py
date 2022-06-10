@@ -49,13 +49,13 @@ def cosmo_param(omega_m=None, omega_lambda=None, omega_k=None, q0=None):
    nomega = omega_m is not None
    nq0 = q0 is not None
    # Check which two parameters are defined, and then determine the other two
-   
+
    if nomega and nlambda:
       if not nk:   
          omega_k = 1 - omega_m - omega_lambda
       if not nq0:   
          q0 = omega_m / 2. - omega_lambda
-   
+
    if nomega and nk:
       if not nlambda:   
          omega_lambda = 1. - omega_m - omega_k
@@ -79,13 +79,13 @@ def cosmo_param(omega_m=None, omega_lambda=None, omega_k=None, q0=None):
          omega_k = 1 - 2 * q0 - 3 * omega_lambda
       if not nomega:   
          omega_m = 1. - omega_lambda - omega_k
-   
+
    if nk and nq0:   
       if not nomega:   
          omega_m = (1 + q0 - omega_k) * 2 / 3.
       if not nlambda:   
          omega_lambda = 1. - omega_m - omega_k
-   
+
    #Set default values
    if omega_k is None:
       omega_k = 0       #Default is flat space
@@ -95,6 +95,6 @@ def cosmo_param(omega_m=None, omega_lambda=None, omega_k=None, q0=None):
       omega_m = 1 - omega_lambda
    if q0 is None:
       q0 = (1 - omega_k - 3 * omega_lambda) / 2.
-   
+
    return omega_m, omega_lambda, omega_k, q0
 

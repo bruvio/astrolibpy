@@ -31,9 +31,7 @@ class cacheFunc:
 	
 	def __call__(self,*args, **kw):
 		key =  args+tuple(kw.iteritems())
-		if self.hash.get(key) is not None:
-			pass
-		else:
+		if self.hash.get(key) is None:
 			self.hash[key]=self.func(*args, **kw)
 			self.l.append(key)
 			if len(self.l)>self.maxn:

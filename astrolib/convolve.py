@@ -52,33 +52,29 @@ def convolve(image, psf, ft_psf=None, ft_image=None, no_ft=None, correlate=None,
    imft = ft_image
    noft = no_ft
    auto = auto_correlation
-   
-   sp = array(shape(psf_ft)) 
+
+   sp = array(shape(psf_ft))
    sif = array(shape(imft))
    sim = array(shape(image))
    sc = sim / 2
    npix = array(image, copy=0).size
-   
-   if image.ndim!=2 or noft!=None:   
-      if (auto is not None):   
-         message("auto-correlation only for images with FFT", inf=True)
-         return image
-      else:   
-         if (correlate is not None):   
-            return convol(image, psf)
-         else:
-            return convol(image, rotate(psf, 2))
-   
-   if imft==None or (imft.ndim!=2) or imft.shape!=im.shape: #add the type check
+
+   if image.ndim!=2 or noft!=None:
+      if auto is None:
+         return (convol(image, psf) if
+                 (correlate is not None) else convol(image, rotate(psf, 2)))
+      message("auto-correlation only for images with FFT", inf=True)
+      return image
+   if imft is None or imft.ndim != 2 or imft.shape != im.shape: #add the type check
       imft = ifft2(image)
-   
+
    if (auto is not None):   
       return roll(roll(npix * real(fft2(imft * conjugate(imft))), sc[0], 0),sc[1],1)
 
-   if (ft_psf==None or ft_psf.ndim!=2 or ft_psf.shape!=image.shape or 
-            ft_psf.dtype!=image.dtype):
+   if (ft_psf is None or ft_psf.ndim != 2 or ft_psf.shape != image.shape
+       or ft_psf.dtype != image.dtype):
       sp = array(shape(psf))
-      
+
       loc = maximum((sc - sp / 2), 0)         #center PSF in new array,
       s = maximum((sp / 2 - sc), 0)        #handle all cases: smaller or bigger
       l = minimum((s + sim - 1), (sp - 1))
@@ -87,13 +83,13 @@ def convolve(image, psf, ft_psf=None, ft_image=None, no_ft=None, correlate=None,
       psf_ft[loc[1]:loc[1]+l[1]-s[1]+1,loc[0]:loc[0]+l[0]-s[0]+1] = \
                      psf[s[1]:(l[1])+1,s[0]:(l[0])+1]
       psf_ft = ifft2(psf_ft)
-   
+
    if (correlate is not None):   
       conv = npix * real(fft2(imft * conjugate(psf_ft)))
    else:   
       conv = npix * real(fft2(imft * psf_ft))
-   
+
    sc = sc + (sim % 2)   #shift correction for odd size images.
-   
+
    return roll(roll(conv, sc[0],0), sc[1],1)
 

@@ -104,12 +104,11 @@ def _getcode():
 	return cdef, src
 
 def _hasher(cdef, src):
-	md5 = hashlib.md5((cdef+src).encode('utf-8')).hexdigest()[:6]
-	return md5
+	return hashlib.md5((cdef+src).encode('utf-8')).hexdigest()[:6]
 
 def _getlibname():
 	hash = _hasher(*_getcode())
-	return '_quick_hist_'+hash
+	return f'_quick_hist_{hash}'
 
 def _buildlib():
 	cdef, src = _getcode()
@@ -139,9 +138,7 @@ def quick_hist(arrs, range=None, nbins=None, weights=None, getPos=False):
 	"""
 	nd = len(arrs)
 	if range is None:
-		range = []
-		for i in np.arange(nd):
-			range.append((arrs[0].min(), arrs[0].max()))
+		range = [(arrs[0].min(), arrs[0].max()) for _ in np.arange(nd)]
 	if nbins is None:
 		nbins = [10] * nd
 
@@ -156,10 +153,9 @@ def quick_hist(arrs, range=None, nbins=None, weights=None, getPos=False):
 	for curarr in arrs:
 		if (curarr.size) != nx:
 			raise ValueError('All the input arrays MUST have the same length!')
-	if weights is not None:
-		if (weights.size) != nx:
-			raise ValueError(
-				'The weights array MUST have the same length as the input arrays')
+	if weights is not None and (weights.size) != nx:
+		raise ValueError(
+			'The weights array MUST have the same length as the input arrays')
 	# convert all the bins into integers
 	nbins = [int(_tmp) for _tmp in nbins]
 
@@ -206,9 +202,6 @@ def quick_hist(arrs, range=None, nbins=None, weights=None, getPos=False):
 	ind = ind.astype(bool)
 
 	poss = poss[ind]
-	newlen = len(poss)
-
-
 	nret = np.array(nbins, dtype=np.int64).prod()
 
 	if weights is not None:
@@ -226,23 +219,24 @@ def quick_hist(arrs, range=None, nbins=None, weights=None, getPos=False):
 	if not slow:
 		poss_ffi = M.ffi.cast('int64_t *', M.ffi.from_buffer(poss))
 
-		if weights is not None:
+		newlen = len(poss)
+
+
+		if weights is None:
+			res_ffi = M.ffi.cast('int64_t *', M.ffi.from_buffer(res))
+			M.lib.adder_now(res_ffi, poss_ffi, newlen)
+		else:
 			weightsind_ffi = M.ffi.cast('double *', M.ffi.from_buffer(weightsind))
 			res_ffi = M.ffi.cast('double *', M.ffi.from_buffer(res))
 			M.lib.adder_wei(res_ffi, poss_ffi, weightsind_ffi, newlen)
-		else:
-			res_ffi = M.ffi.cast('int64_t *', M.ffi.from_buffer(res))
-			M.lib.adder_now(res_ffi, poss_ffi, newlen)
+	elif weights is None:
+		for i in np.arange(len(poss)):
+			res[poss[i]] += 1
 	else:
-		if weights is None:
-			for i in np.arange(len(poss)):
-				res[poss[i]] += 1
-		else:
-			for i in np.arange(len(poss)):
-				res[poss[i]] += weightsind[i]
+		for i in np.arange(len(poss)):
+			res[poss[i]] += weightsind[i]
 	if not getPos:
 		return res.reshape(nbins)
-	else:
-		H = np.zeros(len(ind), dtype=np.int64) - 1
-		H[ind] = poss
-		return res.reshape(nbins), H
+	H = np.zeros(len(ind), dtype=np.int64) - 1
+	H[ind] = poss
+	return res.reshape(nbins), H

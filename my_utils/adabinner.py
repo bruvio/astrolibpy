@@ -153,17 +153,13 @@ def hist2d(x, y, xmin=None, xmax=None, ymin=None, ymax=None, hi=[2,10],
 	ymod = (y-ymin)/(ymax-ymin)
 
 	ind = (xmod>=0)&(xmod<=1)&(ymod>=0)&(ymod<=1)
-	hh,pixcen,area = __doit2d(xmod[ind], ymod[ind], hi1=hi[0], hi2=hi[1], thresh=thresh)	
+	hh,pixcen,area = __doit2d(xmod[ind], ymod[ind], hi1=hi[0], hi2=hi[1], thresh=thresh)
 	xloc = numpy.linspace(xmin,xmax,hh.shape[0],False)
 	yloc = numpy.linspace(ymin,ymax,hh.shape[0],False)
 	xloc += 0.5*(xloc[1]-xloc[0])
 	yloc += 0.5*(yloc[1]-yloc[0])
-	
-	if full_output:
-		out = hh,xloc,yloc,pixcen,area
-	else:
-		out = hh
-	return out
+
+	return (hh, xloc, yloc, pixcen, area) if full_output else hh
 
 def hist(x, xmin=None, xmax=None, hi=[2,10], thresh=30):
 	"""

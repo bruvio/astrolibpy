@@ -27,7 +27,6 @@ class MultiClicker:
                     self.points.append((event.xdata, event.ydata))
             except:
                 raise
-                print('printing failed')
 
         self.canvas = fig.canvas
         self.cid = self.canvas.mpl_connect('button_press_event', onclick)
@@ -81,10 +80,9 @@ def clicker(fig, xobj=None):
             print('cid=%s button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
                   (cid, event.button, event.x, event.y, event.xdata,
                    event.ydata))
-            if xobj is not None:
-                if isinstance(xobj, dict):
-                    xobj['x'] = event.xdata
-                    xobj['y'] = event.ydata
+            if xobj is not None and isinstance(xobj, dict):
+                xobj['x'] = event.xdata
+                xobj['y'] = event.ydata
         except:
             print('printing failed')
         event.canvas.mpl_disconnect(cid)

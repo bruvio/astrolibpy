@@ -22,15 +22,12 @@ def from_hex(arr, delim=':'):
 	for a in arr:
 		m = r.search(a)
 
-		sign = m.group(1)=='-'
-		if sign:
-			sign=-1
-		else:
-			sign=1
-		i1 = int(m.group(2))
-		i2 = int(m.group(3))
-		i3 = float(m.group(4))
-		val = sign*(int(i1)+int(i2)/60.+(float(i3))/3600.)
+		sign = m[1] == '-'
+		sign = -1 if sign else 1
+		i1 = int(m[2])
+		i2 = int(m[3])
+		i3 = float(m[4])
+		val = sign * (i1 + i2 / 60. + i3 / 3600.)
 		ret.append(val)
 	return numpy.array(ret)
 		

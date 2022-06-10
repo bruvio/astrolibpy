@@ -52,27 +52,22 @@ def get_marker(ps, linestyle):
             marker = ps
         else:
             marker = ' '
-            if linestyle is not None:
-                outlinestyle = linestyle
-            else:
-                outlinestyle = '-'
+            outlinestyle = linestyle if linestyle is not None else '-'
     return (marker, outlinestyle)
 
 
 def filter_epa(im, kernsize):
-    if not hasattr(kernsize, '__iter__'):
-        kernsize1, kernsize2 = kernsize, kernsize
-    else:
-        kernsize1, kernsize2 = kernsize[0:2]
+    kernsize1, kernsize2 = (
+        kernsize[:2] if hasattr(kernsize, '__iter__') else (kernsize, kernsize)
+    )
+
     k11 = math.ceil(kernsize1)
     k12 = math.ceil(kernsize2)
     xgrid, ygrid = np.mgrid[-k11:k11:1, -k12:k12:1]
     r2 = (xgrid / kernsize1)**2 + (ygrid / kernsize2)**2
     filt = (1 - r2) * (r2 <= 1)
     filt = filt / filt.sum()
-    # IMPORTANT TRANSPOSITION, because the image first dimension is y
-    im1 = scipy.ndimage.filters.convolve(im, filt.T, mode='reflect')
-    return im1
+    return scipy.ndimage.filters.convolve(im, filt.T, mode='reflect')
 
 
 def smoother(arr, smooth=None, kernel=None):
@@ -223,10 +218,7 @@ def plothist(x,
         max = np.nanmax(dat)
 
     if bin is None and nbins is None:
-        if not knuth:
-            nbins = 100
-        else:
-            nbins = __findKnuth(dat, min, max)
+        nbins = __findKnuth(dat, min, max) if knuth else 100
         bin = (max - min) * 1. / nbins
     elif nbins is None:
         nbins = int(math.ceil((max - min) * 1. / bin))
@@ -238,15 +230,15 @@ def plothist(x,
         warnings.warn(
             'both bin= and nbins= keywords were specified in ' +
             'the plothist call', RuntimeWarning)
-        pass
-        # if both nbins and bin are defined I don't do anything
-        # it may be non-intuitive if kernel option is used, because
-        # it uses both nbins and bin options
-    if cumulative:
-        if (kernel is not None or adaptive or weights is not None):
-            raise RuntimeError(
-                'cumulative is incompatible with weights, kernel ' +
-                'or adaptive options')
+            # if both nbins and bin are defined I don't do anything
+            # it may be non-intuitive if kernel option is used, because
+            # it uses both nbins and bin options
+    if cumulative and (
+        (kernel is not None or adaptive or weights is not None)
+    ):
+        raise RuntimeError(
+            'cumulative is incompatible with weights, kernel ' +
+            'or adaptive options')
     if kernel is None:
         if not adaptive:
             if np.isscalar(weights) and weights is not None:
@@ -291,10 +283,7 @@ def plothist(x,
         hh1 = np.exp(kde.score_samples(loc1.reshape(-1, 1)))
         if weights is not None:
             print('WARNING weights ignored for KDE !')
-    if overplot:
-        func = oplot
-    else:
-        func = plot
+    func = oplot if overplot else plot
     if norm:
         hh1 = hh1 * 1. / hh1.max()
     kw['ps'] = kw.get('ps') or 0
@@ -375,15 +364,9 @@ def plot(arg1,
 
     if xrange is None and yrange is None:
         ind = np.isfinite(x)
-        if not ind.any():
-            xrange = [0, 1]
-        else:
-            xrange = [np.min(x[ind]), np.max(x[ind])]
+        xrange = [np.min(x[ind]), np.max(x[ind])] if ind.any() else [0, 1]
         ind = np.isfinite(y)
-        if not ind.any():
-            yrange = [0, 1]
-        else:
-            yrange = [np.min(y[ind]), np.max(y[ind])]
+        yrange = [np.min(y[ind]), np.max(y[ind])] if ind.any() else [0, 1]
         assert (pad_range >= 0)
         xrange = [
             xrange[0] - pad_range * (xrange[1] - xrange[0]),
@@ -395,7 +378,7 @@ def plot(arg1,
         ]
 
         del ind
-    elif xrange is None and yrange is not None:
+    elif xrange is None:
         ind = (y < max(yrange[1], yrange[0])) & (y > min(
             yrange[0], yrange[1])) & np.isfinite(x)
         if ind.any():
@@ -403,7 +386,7 @@ def plot(arg1,
         else:
             xrange = [np.min(x), np.max(x)]
         del ind
-    elif xrange is not None and yrange is None:
+    elif yrange is None:
         ind = (x < np.maximum(xrange[1], xrange[0])) & (x > np.minimum(
             xrange[0], xrange[1])) & np.isfinite(y)
         if ind.any():

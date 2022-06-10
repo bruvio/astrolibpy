@@ -34,14 +34,13 @@ class bovy_healpy:
 			return bovy_healpy._ang2vert_eq(nside,centerTheta,centerPhi,z)
 		else:
 			return bovy_healpy._ang2vert(nside,centerTheta,centerPhi,z)
-	@staticmethod		
+	@staticmethod
 	def _ang2vert_eq(nside,theta,phi,z):
 		a= 4./3./nside
 		b= 8./3./sc.pi
 		deltaZ= a
 		deltaPhi= a/b
-		out= []
-		out.append([sc.arccos(z+deltaZ/2),phi])
+		out = [[sc.arccos(z+deltaZ/2), phi]]
 		out.append([theta,phi-deltaPhi/2.])
 		out.append([sc.arccos(z-deltaZ/2),phi])
 		out.append([theta,phi+deltaPhi/2.])
@@ -50,8 +49,7 @@ class bovy_healpy:
 	def _ang2vert(nside,theta,phi,z):
 		(xsCenter,ysCenter)= bovy_healpy._ang2xsys(z,phi)
 		delta= sc.pi/4./nside
-		out= []
-		out.append(bovy_healpy._xsys2ang(xsCenter,ysCenter+delta))
+		out = [bovy_healpy._xsys2ang(xsCenter, ysCenter+delta)]
 		out.append(bovy_healpy._xsys2ang(xsCenter-delta,ysCenter))
 		out.append(bovy_healpy._xsys2ang(xsCenter,ysCenter-delta))
 		out.append(bovy_healpy._xsys2ang(xsCenter+delta,ysCenter))
@@ -60,23 +58,19 @@ class bovy_healpy:
 	def _xsys2ang(xs,ys):
 		if sc.fabs(ys) <= sc.pi/4.:
 			return [sc.arccos(8./3./sc.pi*ys),xs]
-		else:
-			xt= (xs % (sc.pi/2.))
-			fabsys= sc.fabs(ys)
-			theta= sc.arccos((1.-1./3.*(2.-4.*fabsys/sc.pi)**2.)*ys/fabsys)
-			if fabsys == sc.pi/2.:
-				phi= xs-fabsys+sc.pi/4.
-			else:
-				phi= xs-(fabsys-sc.pi/4.)/(fabsys-sc.pi/2.)*(xt-sc.pi/4.) 
-			return [theta % (sc.pi+0.0000000001),phi % (2.*sc.pi)] #Hack
+		xt= (xs % (sc.pi/2.))
+		fabsys= sc.fabs(ys)
+		theta= sc.arccos((1.-1./3.*(2.-4.*fabsys/sc.pi)**2.)*ys/fabsys)
+		phi = (xs - fabsys + sc.pi / 4.0 if fabsys == sc.pi / 2.0 else xs -
+		       (fabsys - sc.pi / 4.0) / (fabsys - sc.pi / 2.0) * (xt - sc.pi / 4.0))
+		return [theta % (sc.pi+0.0000000001),phi % (2.*sc.pi)] #Hack
 	@staticmethod
 	def _ang2xsys(z,phi):
 		if sc.fabs(z) <= 2./3.:
 			return [phi,3.*sc.pi/8.*z]
-		else:
-			phit= (phi % (sc.pi/2.))
-			sigz= bovy_healpy._sigma(z)
-			return [phi-(sc.fabs(sigz)-1.)*(phit-sc.pi/4.),sc.pi/4.*sigz]
+		phit= (phi % (sc.pi/2.))
+		sigz= bovy_healpy._sigma(z)
+		return [phi-(sc.fabs(sigz)-1.)*(phit-sc.pi/4.),sc.pi/4.*sigz]
 
 	@staticmethod
 	def _sigma(z):
@@ -113,14 +107,11 @@ def healmap(ras, decs, ramin=0, ramax=360, decmin=-90, decmax=90, nside=64,
 
 	collist = []
 	fac = 180/numpy.pi
-	if wrap_angle is None:
-		wrap_angle = 2 * numpy.pi
-	else:
-		wrap_angle = numpy.deg2rad(wrap_angle)
+	wrap_angle = 2 * numpy.pi if wrap_angle is None else numpy.deg2rad(wrap_angle)
 	for ii, v in enumerate(verts):
 		if skip_empty and hhsum[ii] == 0:
 			continue
-		
+
 		b,a = v.T
 		if (a.max()-a.min())>(numpy.pi):
 			a = ((a + (numpy.pi - a[0])) % (2 * numpy.pi)) - (numpy.pi-a[0])
@@ -149,18 +140,14 @@ def healmap(ras, decs, ramin=0, ramax=360, decmin=-90, decmax=90, nside=64,
 		linewidths=linewidth)
 
 	if vmin is None:
-		vmin = 0 
+		vmin = 0
 	if vmax is None:
 		vmax = hh.max()
 
 	if weight_norm:
 		hh = hh * 1. / (hhsum + 1 * (hhsum == 0))
-	
-	if skip_empty:
-		hh1 = hh[hhsum > 0]
-	else:
-		hh1 = hh
 
+	hh1 = hh[hhsum > 0] if skip_empty else hh
 	coll.set_array(hh1)
 	coll.set_cmap(cmap)
 	coll.set_clim(vmin, vmax)

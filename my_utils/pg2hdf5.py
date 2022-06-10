@@ -31,13 +31,12 @@ __pgTypeHash = {
 
 
 def getConnection(db=None, driver=None, user=None, password=None, host=None):
-    conn_str = "dbname=%s host=%s" % (db, host)
+    conn_str = f"dbname={db} host={host}"
     if user is not None:
-        conn_str = conn_str + ' user=%s' % user
+        conn_str = conn_str + f' user={user}'
     if password is not None:
-        conn_str = conn_str + ' password=%s' % password
-    conn = psycopg2.connect(conn_str)
-    return conn
+        conn_str = conn_str + f' password={password}'
+    return psycopg2.connect(conn_str)
 
 
 def getCursor(conn, driver=None, preamb=None, notNamed=False):
@@ -63,12 +62,12 @@ def __inserter(dtype, filename, qIn, endEvent):
             tups = qIn.get(True, 0.1)
             res = numpy.core.records.array(tups, dtype=dtype)
             if i == 0:
-                for _i, n in enumerate(res.dtype.names):
+                for n in res.dtype.names:
                     fp.create_dataset(n, data=res[n], maxshape=(None, ))
             else:
                 newN = len(tups)
                 N = len(fp[n])
-                for _i, n in enumerate(res.dtype.names):
+                for n in res.dtype.names:
                     fp[n].resize((N + newN, ))
                     fp[n][-newN:] = res[n]
             i += 1
@@ -106,11 +105,7 @@ def get(query,
     try:
         cur = getCursor(conn, driver=driver, preamb=preamb)
 
-        if params is None:
-            res = cur.execute(query)
-        else:
-            res = cur.execute(query, params)
-
+        res = cur.execute(query) if params is None else cur.execute(query, params)
         qIn = Queue(1)
         endEvent = threading.Event()
         nrec = 0
@@ -159,12 +154,11 @@ def get(query,
     cur.close()
     conn.rollback()
 
-    if not getConn:
-        if not connSupplied:
-            conn.close()  # do not close if we were given the connection
-        return res
-    else:
+    if getConn:
         return conn, res
+    if not connSupplied:
+        conn.close()  # do not close if we were given the connection
+    return res
 
 
 if __name__ == '__main__':

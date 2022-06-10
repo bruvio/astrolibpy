@@ -15,27 +15,23 @@ def tvhist2d(a, b, *args, **kw):
 
     if ind is None:
         return idlplot.tvhist2d(a, b, *args, **kw)
-    else:
-        weights = kw.get('weights')
-        if weights is not None:
-            kw['weights'] = kw['weights'][ind]
-        del kw['ind']
-        return idlplot.tvhist2d(a[ind], b[ind], *args, **kw)
+    weights = kw.get('weights')
+    if weights is not None:
+        kw['weights'] = kw['weights'][ind]
+    del kw['ind']
+    return idlplot.tvhist2d(a[ind], b[ind], *args, **kw)
 
 
 def plothist(a, *args, **kw):
     ind = kw.get('ind')
 
     if ind is None:
-        ret = idlplot.plothist(a, *args, **kw)
-    else:
-        weights = kw.get('weights')
-        if weights is not None:
-            if not np.isscalar(kw['weights']):
-                kw['weights'] = kw['weights'][ind]
-        del kw['ind']
-        ret = idlplot.plothist(a[ind], *args, **kw)
-    return ret
+        return idlplot.plothist(a, *args, **kw)
+    weights = kw.get('weights')
+    if weights is not None and not np.isscalar(kw['weights']):
+        kw['weights'] = kw['weights'][ind]
+    del kw['ind']
+    return idlplot.plothist(a[ind], *args, **kw)
 
 
 def plot(a, b=None, **kw):
@@ -66,11 +62,11 @@ def oplot(a, b=None, **kw):
 
 def errorfixer(var, ind):
     var = np.asarray(var)
-    if var.ndim == 2 and var.shape[0] == 2:
-        var1 = [var[0][ind], var[1][ind]]
-    else:
-        var1 = var[ind]
-    return var1
+    return (
+        [var[0][ind], var[1][ind]]
+        if var.ndim == 2 and var.shape[0] == 2
+        else var[ind]
+    )
 
 
 def ploterror(a, b, c, *args, **kw):

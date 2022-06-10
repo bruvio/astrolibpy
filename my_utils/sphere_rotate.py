@@ -40,7 +40,7 @@ def sphere_rotate(ra, dec, rapol, decpol, ra0, revert=False):
 	xnew = numexpr.evaluate('x*Axx+y*Axy+z*Axz')
 	ynew = numexpr.evaluate('x*Ayx+y*Ayy+z*Ayz')
 	znew = numexpr.evaluate('x*Azx+y*Azy+z*Azz')
-	
+
 	del x,y,z
 	tmp = fromrect(xnew,ynew,znew)
 	return (tmp[0],tmp[1])

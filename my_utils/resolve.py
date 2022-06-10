@@ -13,7 +13,7 @@ esolve the object by name using CDS
     Requires the following modules:
         suds, lxml
     """
-    url = 'http://vizier.u-strasbg.fr/cgi-bin/Sesame/-ox/?%s' % objectName
+    url = f'http://vizier.u-strasbg.fr/cgi-bin/Sesame/-ox/?{objectName}'
     f = urlopen(url)
     result = f.read()
     tree = etree.fromstring(result)

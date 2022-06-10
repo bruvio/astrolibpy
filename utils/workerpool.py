@@ -54,14 +54,11 @@ class pool:
 			return iret, ret
 
 	def map(self, *args):
-		if self.mpmap:
-			params=args[1]
-		else:
-			params=args[0]
+		params = args[1] if self.mpmap else args[0]
 		for i, p in enumerate(params):
 			self.queuein.put((i, p))
 		ret = [None] * len(params)
-		for i in range(len(params)):
+		for _ in range(len(params)):
 			resi, res = self.queueout.get()
 			ret[resi] = res
 		return ret

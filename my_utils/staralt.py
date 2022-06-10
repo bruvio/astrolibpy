@@ -50,10 +50,7 @@ def getalt(ra, dec, yr, mon, day, hr, minu, sec=0, lon='-111:35:59', lat='31:57:
 		altMoon = np.rad2deg(1*fbMoon.alt)
 		azMoon = np.rad2deg(1*fbMoon.az);
 		distMoon = sphdist.sphdist(az,alt,azMoon,altMoon)
-	if retSun or retDistMoon:
-		ret = [alt]
-	else:	
-		ret = alt
+	ret = [alt] if retSun or retDistMoon else alt
 	if retSun:
 		ret.append(altSun)
 	if retDistMoon:

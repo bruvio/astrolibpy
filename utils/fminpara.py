@@ -104,16 +104,12 @@ def fmin_para(func, x0, xtol=1e-4, ftol=1e-4, maxiter=None, maxfun=None,
 
 	res = _minimize_neldermead_para(func, x0, callback=callback,  **opts)
 
-	if full_output:
-		retlist = res['x'], res['fun'], res['nit'], res['nfev'], res['status']
-		if retall:
-			retlist += (res['allvecs'], )
-		return retlist
-	else:
-		if retall:
-			return res['x'], res['allvecs']
-		else:
-			return res['x']
+	if not full_output:
+		return (res['x'], res['allvecs']) if retall else res['x']
+	retlist = res['x'], res['fun'], res['nit'], res['nfev'], res['status']
+	if retall:
+		retlist += (res['allvecs'], )
+	return retlist
 
 def _minimize_neldermead_para(func, x0, callback=None,
 						 xtol=1e-4, ftol=1e-4, maxiter=None, maxfev=None,
