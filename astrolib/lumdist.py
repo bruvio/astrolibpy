@@ -77,13 +77,7 @@ def ldist(z, q0=None, lambda0=None):
    term2 = 1. + 2. * (q0 + lambda0) * z
    term3 = z * (2. + z) * lambda0
    denom = (term1 * term2 - term3)
-   if denom>0:
-      out = 1. / msqrt(denom) # since the function is used with scalar arguments
-								  # I use math.sqrt instead of numpy.sqrt for
-                                  # performance reasons
-   else:
-      out = 0.
-   return out
+   return 1. / msqrt(denom) if denom>0 else 0.
 
 
 def lumdist(z, h0=None, k=None, lambda0=None, omega_m=None, q0=None, silent=None):
@@ -95,22 +89,20 @@ def lumdist(z, h0=None, k=None, lambda0=None, omega_m=None, q0=None, silent=None
 
    if isinstance(z, list):
       z = array(z)
-   elif isinstance(z, ndarray):
-      pass
-   else:
+   elif not isinstance(z, ndarray):
       scal = True
       z = array([z])
    n = len(z)
 
    omega_m, lambda0, k, q0 = cosmo_param(omega_m, lambda0, k, q0)
-   
+
    # Check keywords
    c = 2.99792458e5                  #  speed of light in km/s
    if h0 is None:
       h0 = 70
    if not silent:
       print( 'LUMDIST: H0:', h0, ' Omega_m:', omega_m, ' Lambda0', lambda0, ' q0: ', q0, ' k: ', k)
-   
+
    # For the case of Lambda = 0, we use the closed form from equation 5.238 of
    # Astrophysical Formulae (Lang 1998).   This avoids terms that almost cancel
    # at small q0*z better than the more familiar Mattig formula.
@@ -119,9 +111,9 @@ def lumdist(z, h0=None, k=None, lambda0=None, omega_m=None, q0=None, silent=None
       denom = sqrt(1 + 2 * q0 * z) + 1 + q0 * z
       dlum = (c * z / h0) * (1 + z * (1 - q0) / denom)
       return scalret(dlum)
-      
+
       # For non-zero lambda
-   else:   
+   else:
       dlum = z * 0.0
       for i in range(n):
          if z[i] <= 0.0:   
@@ -129,11 +121,10 @@ def lumdist(z, h0=None, k=None, lambda0=None, omega_m=None, q0=None, silent=None
          else:   
             lz = quad(ldist, 0, z[i], args=(q0, lambda0))
             dlum[i] = lz[0]
-      
+
       if k > 0:   
          dlum = sinh(sqrt(k) * dlum) / sqrt(k)
-      else:   
-         if k < 0:   
-            dlum = maximum(sin(sqrt(-k) * dlum) / sqrt(-k), 0)
+      elif k < 0:   
+         dlum = maximum(sin(sqrt(-k) * dlum) / sqrt(-k), 0)
       return scalret(c * (1 + z) * dlum / h0)
 

@@ -65,7 +65,7 @@ def doit(tabname,
         extra = 'true'
     your_ra, your_dec = yourradeccols
     preamb = '' or preamb
-    RES = sqlutilpy.local_join(
+    return sqlutilpy.local_join(
         str.format(
             """
             select {colstring} from
@@ -77,15 +77,23 @@ def doit(tabname,
             s.{racol}, s.{deccol}, {rad}/3600.) and {extra}
                 order by q3c_dist(m.{your_ra}, m.{your_dec},
                 s.{racol},s.{deccol}) asc limit 1) as {tab_alias}
-            on true order by xid """, **locals()),
-        'mytable', (ra, dec, np.arange(len(ra))), (your_ra, your_dec, 'xid'),
-        preamb=('set enable_seqscan to off;' + 'set enable_mergejoin to off;' +
-                'set enable_hashjoin to off;' + (preamb or '')),
+            on true order by xid """,
+            **locals()
+        ),
+        'mytable',
+        (ra, dec, np.arange(len(ra))),
+        (your_ra, your_dec, 'xid'),
+        preamb=(
+            'set enable_seqscan to off;'
+            + 'set enable_mergejoin to off;'
+            + 'set enable_hashjoin to off;'
+            + (preamb or '')
+        ),
         host=host,
         db=db,
         user=user,
         port=(port or 5432),
         password=password,
         asDict=asDict,
-        conn=conn)
-    return RES
+        conn=conn,
+    )

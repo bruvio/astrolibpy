@@ -10,31 +10,28 @@ def correct_pm(ra, dec, pmra, pmdec, dist, split=None, vlsr=None):
         print ('WARNING vlsr is ignored')
     if split is None:
         return correct_pm0(ra, dec, pmra, pmdec, dist)
-    else:
-        N = len(ra)
-        n1 = N // split
+    N = len(ra)
+    n1 = N // split
 
-        ra1 = np.array_split(ra, n1)
-        dec1 = np.array_split(dec, n1)
-        pmra1 = np.array_split(pmra, n1)
-        pmdec1 = np.array_split(pmdec, n1)
-        if hasattr(dist, '__len__'):
-            assert (len(dist) == N)
-        else:
-            dist = np.zeros(N) + dist
-        dist1 = np.array_split(dist, n1)
-        ret = []
+    ra1 = np.array_split(ra, n1)
+    dec1 = np.array_split(dec, n1)
+    pmra1 = np.array_split(pmra, n1)
+    pmdec1 = np.array_split(pmdec, n1)
+    if hasattr(dist, '__len__'):
+        assert (len(dist) == N)
+    else:
+        dist = np.zeros(N) + dist
+    dist1 = np.array_split(dist, n1)
+    ret = [
+        correct_pm0(curra, curdec, curpmra, curpmdec, curdist)
         for curra, curdec, curpmra, curpmdec, curdist in zip(
-                ra1, dec1, pmra1, pmdec1, dist1):
-            ret.append(
-                correct_pm0(curra,
-                            curdec,
-                            curpmra,
-                            curpmdec,
-                            curdist))
-        retpm1 = np.concatenate([_[0] for _ in ret])
-        retpm2 = np.concatenate([_[1] for _ in ret])
-        return retpm1, retpm2
+            ra1, dec1, pmra1, pmdec1, dist1
+        )
+    ]
+
+    retpm1 = np.concatenate([_[0] for _ in ret])
+    retpm2 = np.concatenate([_[1] for _ in ret])
+    return retpm1, retpm2
 
 
 def correct_pm0(ra, dec, pmra, pmdec, dist):

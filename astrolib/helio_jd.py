@@ -67,29 +67,26 @@ def helio_jd(date, ra, dec, b1950=False, time_diff=False):
    """
    
    #Because XYZ uses default B1950 coordinates, we'll convert everything to B1950
-   
+
    if not b1950:
       ra1, dec1 = bprecess(ra, dec)
    else:   
       ra1 = ra
       dec1 = dec
-   
-   
+
+
    delta_t = (array(date).astype(float) - 33282.42345905e0) / 36525.0e0
    epsilon_sec = poly1d([44.836e0, -46.8495, -0.00429, 0.00181][::-1])(delta_t)
    epsilon = deg2rad(23.433333e0 + epsilon_sec / 3600.0e0)
    ra1 = deg2rad(ra1)
    dec1 = deg2rad(dec1)
-   
+
    x, y, z, tmp, tmp, tmp = xyz(date)
-   
+
    #Find extra distance light must travel in AU, multiply by 1.49598e13 cm/AU,
    #and divide by the speed of light, and multiply by 86400 second/year
-   
+
    time = -499.00522e0 * (cos(dec1) * cos(ra1) * x + (tan(epsilon) * sin(dec1) + cos(dec1) * sin(ra1)) * y)
-   if time_diff:   
-      return time
-   else:   
-      return array(date).astype(float) + time / 86400.0e0
+   return time if time_diff else array(date).astype(float) + time / 86400.0e0
    
 

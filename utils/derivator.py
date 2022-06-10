@@ -35,8 +35,7 @@ class derivator:
 				curp = p.copy()
 				curp[i] += eps[i]
 				res[i] = self.func(curp)
-		ret = (res - res0) / eps
-		return ret
+		return (res - res0) / eps
 
 	def __del__(self):
 		if self.pool is not None:

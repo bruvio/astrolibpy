@@ -21,11 +21,10 @@ def mwrfits(filename, arraylist, namelist=None, header=None):
 	if isinstance(arraylist,numpy.ndarray):
 		if arraylist.dtype.type is numpy.void:
 			iter=itertools.izip(arraylist.dtype.names, itertools.imap (arraylist.__getitem__ , arraylist.dtype.names))
-	else:
-		if isinstance(arraylist,types.ListType) or isinstance(arraylist,types.TupleType):
-			iter= zip(namelist, arraylist)
-		elif isinstance(arraylist,types.DictType):
-			iter= arraylist.iteritems()
+	elif isinstance(arraylist, (types.ListType, types.TupleType)):
+		iter= zip(namelist, arraylist)
+	elif isinstance(arraylist,types.DictType):
+		iter= arraylist.iteritems()
 
 	for name, arr in iter:
 		if arr.dtype.type==numpy.int8:
@@ -45,7 +44,7 @@ def mwrfits(filename, arraylist, namelist=None, header=None):
 		elif arr.dtype.type==numpy.bool_:
 			format='I' # bool as int
 		else:
-			raise Exception("Oops unknown datatype %s"%arr.dtype)
+			raise Exception(f"Oops unknown datatype {arr.dtype}")
 		tmplist.append(pyfits.Column(name=name, array=arr, format=format))
 	hdu = pyfits.new_table(tmplist)
 	hdu.writeto(filename,clobber=True)

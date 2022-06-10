@@ -91,30 +91,30 @@ def precess(ra0, dec0, equinox1, equinox2, doprint=False, fk4=False, radian=Fals
       ra=array([ra0])
       dec=array([dec0])
    npts = ra.size 
-   
+
    if not radian:   
       ra_rad = deg2rad(ra)     #Convert to double precision if not already
       dec_rad = deg2rad(dec)
    else:   
       ra_rad = ra
       dec_rad = dec
-   
+
    a = cos(dec_rad)
-   
+
    x = zeros((npts, 3))
    x[:,0] = a * cos(ra_rad)
    x[:,1] = a * sin(ra_rad)
    x[:,2] = sin(dec_rad)
-   
+
    # Use PREMAT function to get precession matrix from Equinox1 to Equinox2
-   
+
    r = premat(equinox1, equinox2, fk4=fk4)
-   
+
    x2 = transpose(dot(transpose(r), transpose(x)))      #rotate to get output direction cosines
-   
+
    ra_rad = zeros(npts) + arctan2(x2[:,1], x2[:,0])
    dec_rad = zeros(npts) + arcsin(x2[:,2])
-   
+
    if not radian:   
       ra = rad2deg(ra_rad)
       ra = ra + (ra < 0.) * 360.e0            #RA between 0 and 360 degrees
@@ -123,7 +123,7 @@ def precess(ra0, dec0, equinox1, equinox2, doprint=False, fk4=False, radian=Fals
       ra = ra_rad
       dec = dec_rad
       ra = ra + (ra < 0.) * 2.0e0 * pi
-   
+
    if doprint:   
       print( 'Equinox (%.2f): %f,%f' % (equinox2, ra, dec))
    if scal:

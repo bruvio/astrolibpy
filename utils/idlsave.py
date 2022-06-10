@@ -54,10 +54,7 @@ class idlsave:
     @staticmethod
     def parseVersion(s):
         m = re.match(r'IDLSAVE-v(\d\d\d\d)', s)
-        if m is None:
-            return 1
-        else:
-            return int(m.group(1))
+        return 1 if m is None else int(m[1])
 
     @staticmethod
     def __cureString(s):
@@ -97,30 +94,24 @@ class idlsave:
         if len(names) != len(args):
             raise Exception("The number of variable names should \
                     be equal to the number of variables)")
-        f = open(filename, "wb")
-        version = kw.get('version', 2)
-        curhash = {}
-        for a in range(len(names)):
-            curhash[names[a]] = args[a]
-        if 'protocol' not in kw:
-            protocol = pickle.HIGHEST_PROTOCOL
-        else:
-            protocol = kw['protocol']
-        if version == 1:
-            pickle.dump(curhash, f, protocol)
-        elif version == 2:
-            f.write(idlsave.versionId(version).encode('ascii'))
-            headlen1 = f.tell()
-            f.write(struct.pack('!q', 0))
-            offsets = dict([(name, 0) for name in names])
-            for name in names:
-                offsets[name] = f.tell()
-                pickle.dump(curhash[name], f, protocol)
-            offOffs = f.tell()
-            pickle.dump(offsets, f, protocol)
-            f.seek(headlen1)
-            f.write(struct.pack('!q', offOffs))
-        f.close()
+        with open(filename, "wb") as f:
+            version = kw.get('version', 2)
+            curhash = {names[a]: args[a] for a in range(len(names))}
+            protocol = pickle.HIGHEST_PROTOCOL if 'protocol' not in kw else kw['protocol']
+            if version == 1:
+                pickle.dump(curhash, f, protocol)
+            elif version == 2:
+                f.write(idlsave.versionId(version).encode('ascii'))
+                headlen1 = f.tell()
+                f.write(struct.pack('!q', 0))
+                offsets = dict([(name, 0) for name in names])
+                for name in names:
+                    offsets[name] = f.tell()
+                    pickle.dump(curhash[name], f, protocol)
+                offOffs = f.tell()
+                pickle.dump(offsets, f, protocol)
+                f.seek(headlen1)
+                f.write(struct.pack('!q', offOffs))
         del curhash
         return None
 
@@ -159,9 +150,8 @@ class idlsave:
                     return ret
                 buf = ",".join(idlsave.dhash.keys())
                 if len(idlsave.dhash) == 1:
-                    buf = buf + ','
-                buf = buf + \
-                    "=idlsave.getallvars(printVars=%s)" % (str(printVars))
+                    buf += ','
+                buf += f"=idlsave.getallvars(printVars={str(printVars)})"
                 return buf
             else:
                 names = idlsave.__splitString(names)
@@ -172,10 +162,7 @@ class idlsave:
             offOff = struct.unpack('!q', f.read(8))[0]
             f.seek(offOff)
             offsets = pickle.load(f)
-            if names is None:
-                names1 = offsets.keys()
-            else:
-                names1 = idlsave.__splitString(names)
+            names1 = offsets.keys() if names is None else idlsave.__splitString(names)
             retd = {}
             for name in names1:
                 off = offsets[name]
@@ -192,8 +179,8 @@ class idlsave:
                 idlsave.dhash = retd
                 buf = ",".join(idlsave.dhash.keys())
                 if len(idlsave.dhash) == 1:
-                    buf = buf + ','
-                buf = buf + "=idlsave.getallvars(%s)" % str(printVars)
+                    buf += ','
+                buf += f"=idlsave.getallvars({str(printVars)})"
                 return buf  # return the string for exec
             else:
                 res = [retd[a] for a in names1]
@@ -201,8 +188,8 @@ class idlsave:
 
     @staticmethod
     def getallvars(printVars=False):
-        tup = tuple(a for a in idlsave.dhash.values())
+        tup = tuple(idlsave.dhash.values())
         if printVars:
-            print(','.join([k for k in idlsave.dhash.keys()]))
+            print(','.join(list(idlsave.dhash.keys())))
         del idlsave.dhash
         return tup
